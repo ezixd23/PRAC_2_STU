@@ -10,9 +10,8 @@ public class Synchronizer {
 	
 	private Semaphore pitStop = new Semaphore(1);
 	private Semaphore rentry = new Semaphore(0);
-	private Semaphore raising = new Semaphore(0);
-	private Semaphore lowering = new Semaphore(0);
-	private Semaphore replacement = new Semaphore(0);
+	private Semaphore tires = new Semaphore(0,true);
+	private Semaphore change = new Semaphore(0,true);
 	
 	private volatile int currentCar = -1; // the id of the car being serviced
 	private Kerberos analyser = new Kerberos(); // the trace analyser
@@ -21,21 +20,18 @@ public class Synchronizer {
 	
 	public void startRaising () {
 		/* COMPLETE */
-		raising.acquireUninterruptibly();
+		tires.release(4);
 	}
 	
 	public void endRaising () {
 		analyser.writeString("Car["+currentCar+"] is UP"); // leave this line at the very beginning
 		/* COMPLETE */
-		replacement.release();
-		replacement.release();
-		replacement.release();
-		replacement.release();
+		change.release();
 	}
 	
 	public void startLowering () {
 		/* COMPLETE */
-		lowering.acquireUninterruptibly();
+		change.acquireUninterruptibly();
 	}
 	
 	public void endLowering () {
@@ -50,13 +46,14 @@ public class Synchronizer {
 	
 	public void startReplacement() {
 		/* COMPLETE */
-		replacement.acquireUninterruptibly();
+		tires.acquireUninterruptibly();
+		change.acquireUninterruptibly();
 	}
 	
 	public void endReplacement(String changer) {
 		analyser.writeStringSync("\tTYRE REPLACED["+currentCar+"]: "+changer); // leave this line at the very beginning
 		/* COMPLETE */
-		lowering.release();
+		change.release();
 	}
 	
 	// --- operations invoked by CAR
@@ -70,7 +67,6 @@ public class Synchronizer {
 		currentCar = car;
 		
 		/* COMPLETE */
-		raising.release();
 		rentry.acquireUninterruptibly();
 		analyser.writeString("Car["+car+"] RE-ENTERS circuit\n");
 
