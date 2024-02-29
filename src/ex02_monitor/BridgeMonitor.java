@@ -16,6 +16,13 @@ public class BridgeMonitor {
 	/* Declare lock, condition objects and all the simple-typed variables that
 	 * you deem necessary to solve the problem
 	 */
+	private ReentrantLock lock = new ReentrantLock(true);
+	private Condition southWaits = lock.newCondition();
+	private Condition northWaits = lock.newCondition();
+	private int enterS = 0;
+	private int waitingS = 0;
+	private int enterN = 0;
+	private int waitingN = 0;
 	
 	// Constructor. Do not modify it
 	public BridgeMonitor (int maxWhenWaiting, StateViewer viewer) {
@@ -26,44 +33,58 @@ public class BridgeMonitor {
 	
 	public void letMeGoSouth (int id) {
 		/* COMPLETE */
-		
+		lock.lock();
 		safetyAnalyzer.readyToGoSouth(id); // do not remove
-		
-		
-		/* COMPLETE */
-		
+		if(enterN==MAX && waitingS!=0) southWaits.signal();
+		else waitingS ++;
+		/* COMPLETE */ 
 		safetyAnalyzer.goingSouth(id); // do not remove
 		
 		/* COMPLETE */
+		lock.unlock();
 	}
 	
 	public void southReached (int id) {
 		/* COMPLETE */
-		
+		lock.lock();
 		safetyAnalyzer.southReached(id); // do not remove
-		
+		if(enterS<MAX) {
+			southWaits.awaitUninterruptibly();
+			waitingS --;
+			enterS++;
+		}else
+			enterS = 0;
 		/* COMPLETE */
+		lock.unlock();
 	}
 	
 	//-----
 	
 	public void letMeGoNorth (int id) {
 		/* COMPLETE */
-		
+		lock.lock();
 		safetyAnalyzer.readyToGoNorth(id); // do not remove
 		
 		/* COMPLETE */
-		
+		if(enterS==MAX && waitingN!=0) northWaits.signal();
+		else waitingN ++;
 		safetyAnalyzer.goingNorth(id); // do not remove
 		/* COMPLETE */
+		lock.unlock();
 	}
 	
 	public void northReached (int id) {
 		/* COMPLETE */
-		
+		lock.lock();
 		safetyAnalyzer.northReached(id); // do not remove
-		
+		if(enterN<MAX) {
+			northWaits.awaitUninterruptibly();
+			waitingN --;
+			enterN++;
+		}else
+			enterN = 0;
 		/* COMPLETE */
+		lock.unlock();
 	}
 	
 }
