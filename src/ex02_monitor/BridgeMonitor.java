@@ -16,12 +16,14 @@ public class BridgeMonitor {
 	/* Declare lock, condition objects and all the simple-typed variables that
 	 * you deem necessary to solve the problem
 	 */
-	private final Lock lock = new ReentrantLock();
+	private final Lock lock = new ReentrantLock(true);
 	Condition northQueue = lock.newCondition();
 	Condition southQueue = lock.newCondition();
 
 	private int northCount = 0;
 	private int southCount = 0;
+	private int northWaitCount = 0;
+	private int southWaitCount = 0;
 	private int inTransit = 0;
 	
 	// Constructor. Do not modify it
@@ -34,19 +36,24 @@ public class BridgeMonitor {
 	public void letMeGoSouth (int id) {
 		/* COMPLETE */
 		this.lock.lock();
-		if(southBarrier == CLOSED)
+		while (southBarrier == CLOSED || this.southCount >= MAX) {
+			this.southWaitCount++;
 			southQueue.awaitUninterruptibly();
+			this.southWaitCount--;
+		}
+		this.northBarrier = CLOSED;
+		System.out.println("closed north");
 		
 		safetyAnalyzer.readyToGoSouth(id); // do not remove
 		
 		
 		/* COMPLETE */
 		this.southCount++;
+		this.inTransit++;
 		
 		safetyAnalyzer.goingSouth(id); // do not remove
 		
 		/* COMPLETE */
-		this.inTransit++;
 		this.lock.unlock();
 	}
 	
@@ -60,12 +67,20 @@ public class BridgeMonitor {
 		this.inTransit--;
 
 		if (this.southCount >= MAX) {
-			this.southCount = 0;
-			this.southBarrier = CLOSED;
-			this.northBarrier = OPEN;
-			this.northQueue.signal();
+			if(this.northWaitCount == 0) {
+				this.southQueue.signal();
+			} else {
+				if (this.inTransit == 0) {
+					this.southCount = 0;
+					this.southBarrier = CLOSED;
+					this.northBarrier = OPEN;
+					this.northQueue.signal();
+				} else {
+					this.southQueue.signal();
+				}
+			}
 		} else {
-			if(this.inTransit == 0) this.southQueue.signal();
+			this.southQueue.signal();
 		}
 		this.lock.unlock();
 	}
@@ -75,17 +90,22 @@ public class BridgeMonitor {
 	public void letMeGoNorth (int id) {
 		this.lock.lock();
 		/* COMPLETE */
-		if(northBarrier == CLOSED)
+		while (northBarrier == CLOSED || this.northCount >= MAX) {
+			this.northWaitCount++;
 			northQueue.awaitUninterruptibly();
+			this.northWaitCount--;
+		}
+		this.southBarrier = CLOSED;
+		System.out.println("closed south");
 		
 		safetyAnalyzer.readyToGoNorth(id); // do not remove
 		
 		/* COMPLETE */
 		this.northCount++;
+		this.inTransit++;
 		
 		safetyAnalyzer.goingNorth(id); // do not remove
 		/* COMPLETE */
-		this.inTransit++;
 		this.lock.unlock();
 	}
 	
@@ -96,16 +116,22 @@ public class BridgeMonitor {
 		safetyAnalyzer.northReached(id); // do not remove
 		
 		/* COMPLETE */
-		System.out.println(this.northCount);
-		System.out.println(this.inTransit);
 		this.inTransit--;
 		if (this.northCount >= MAX) {
-			this.northCount = 0;
-			this.northBarrier = CLOSED;
-			this.southBarrier = OPEN;
-			this.southQueue.signal();
+			if (this.southWaitCount == 0) {
+				this.northQueue.signal();
+			} else {
+				if (this.inTransit == 0) {
+					this.northCount = 0;
+					this.northBarrier = CLOSED;
+					this.southBarrier = OPEN;
+					this.southQueue.signal();
+				} else {
+					this.northQueue.signal();
+				}
+			}
 		} else {
-			if(this.inTransit == 0) this.northQueue.signal();
+			this.northQueue.signal();
 		}
 
 		this.lock.unlock();
