@@ -36,6 +36,8 @@ public class BridgeMonitor {
 	public void letMeGoSouth (int id) {
 		/* COMPLETE */
 		this.lock.lock();
+		
+		safetyAnalyzer.readyToGoSouth(id); // do not remove
 		while (southBarrier == CLOSED || this.southCount >= MAX) {
 			this.southWaitCount++;
 			southQueue.awaitUninterruptibly();
@@ -43,8 +45,6 @@ public class BridgeMonitor {
 		}
 		this.northBarrier = CLOSED;
 		System.out.println("closed north");
-		
-		safetyAnalyzer.readyToGoSouth(id); // do not remove
 		
 		
 		/* COMPLETE */
@@ -88,8 +88,11 @@ public class BridgeMonitor {
 	//-----
 	
 	public void letMeGoNorth (int id) {
-		this.lock.lock();
 		/* COMPLETE */
+		this.lock.lock();
+		
+		safetyAnalyzer.readyToGoNorth(id); // do not remove
+
 		while (northBarrier == CLOSED || this.northCount >= MAX) {
 			this.northWaitCount++;
 			northQueue.awaitUninterruptibly();
@@ -97,8 +100,6 @@ public class BridgeMonitor {
 		}
 		this.southBarrier = CLOSED;
 		System.out.println("closed south");
-		
-		safetyAnalyzer.readyToGoNorth(id); // do not remove
 		
 		/* COMPLETE */
 		this.northCount++;
