@@ -44,7 +44,6 @@ public class BridgeMonitor {
 			this.southWaitCount--;
 		}
 		this.northBarrier = CLOSED;
-		System.out.println("closed north");
 		
 		
 		/* COMPLETE */
@@ -68,6 +67,7 @@ public class BridgeMonitor {
 
 		if (this.southCount >= MAX) {
 			if(this.northWaitCount == 0) {
+				this.southCount = 0;
 				this.southQueue.signal();
 			} else {
 				if (this.inTransit == 0) {
@@ -75,8 +75,6 @@ public class BridgeMonitor {
 					this.southBarrier = CLOSED;
 					this.northBarrier = OPEN;
 					this.northQueue.signal();
-				} else {
-					this.southQueue.signal();
 				}
 			}
 		} else {
@@ -99,7 +97,6 @@ public class BridgeMonitor {
 			this.northWaitCount--;
 		}
 		this.southBarrier = CLOSED;
-		System.out.println("closed south");
 		
 		/* COMPLETE */
 		this.northCount++;
@@ -120,6 +117,7 @@ public class BridgeMonitor {
 		this.inTransit--;
 		if (this.northCount >= MAX) {
 			if (this.southWaitCount == 0) {
+				this.northCount = 0;
 				this.northQueue.signal();
 			} else {
 				if (this.inTransit == 0) {
@@ -127,8 +125,6 @@ public class BridgeMonitor {
 					this.northBarrier = CLOSED;
 					this.southBarrier = OPEN;
 					this.southQueue.signal();
-				} else {
-					this.northQueue.signal();
 				}
 			}
 		} else {
