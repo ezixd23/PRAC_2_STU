@@ -49,6 +49,10 @@ public class BridgeMonitor {
 		/* COMPLETE */
 		this.southCount++;
 		this.inTransit++;
+
+		if(this.southCount >= MAX) {
+			this.southBarrier = CLOSED;
+		}
 		
 		safetyAnalyzer.goingSouth(id); // do not remove
 		
@@ -64,23 +68,22 @@ public class BridgeMonitor {
 		
 		/* COMPLETE */
 		this.inTransit--;
-
-		if (this.southCount >= MAX) {
-			if(this.northWaitCount == 0) {
-				this.southCount = 0;
-				this.southQueue.signal();
-			} else {
-				if (this.inTransit == 0) {
-					this.southCount = 0;
-					this.southBarrier = CLOSED;
-					this.northBarrier = OPEN;
-					this.northQueue.signal();
-				}
-			}
+		if(this.inTransit == 0) {
+			if(this.northWaitCount > 0) this.closeSouthOpenNorth();
+			else this.closeNorthOpenSouth();
 		} else {
-			this.southQueue.signal();
+			this.southBarrier = OPEN;
 		}
+		this.northQueue.signal();
+		this.southQueue.signal();
 		this.lock.unlock();
+	}
+
+	public void closeSouthOpenNorth() {
+		this.southCount = 0;
+		this.northCount = 0;
+		this.southBarrier = CLOSED;
+		this.northBarrier = OPEN;
 	}
 	
 	//-----
@@ -102,6 +105,10 @@ public class BridgeMonitor {
 		this.northCount++;
 		this.inTransit++;
 		
+		if(this.northCount >= MAX) {
+			this.northBarrier = CLOSED;
+		}
+		
 		safetyAnalyzer.goingNorth(id); // do not remove
 		/* COMPLETE */
 		this.lock.unlock();
@@ -115,23 +122,23 @@ public class BridgeMonitor {
 		
 		/* COMPLETE */
 		this.inTransit--;
-		if (this.northCount >= MAX) {
-			if (this.southWaitCount == 0) {
-				this.northCount = 0;
-				this.northQueue.signal();
-			} else {
-				if (this.inTransit == 0) {
-					this.northCount = 0;
-					this.northBarrier = CLOSED;
-					this.southBarrier = OPEN;
-					this.southQueue.signal();
-				}
-			}
+		if(this.inTransit == 0) {
+			if(this.southWaitCount > 0) this.closeNorthOpenSouth();
+			else this.closeSouthOpenNorth();
 		} else {
-			this.northQueue.signal();
+			this.northBarrier = OPEN;
 		}
+		this.northQueue.signal();
+		this.southQueue.signal();
 
 		this.lock.unlock();
+	}
+
+	public void closeNorthOpenSouth() {
+		this.southCount = 0;
+		this.northCount = 0;
+		this.northBarrier = CLOSED;
+		this.southBarrier = OPEN;
 	}
 	
 }
