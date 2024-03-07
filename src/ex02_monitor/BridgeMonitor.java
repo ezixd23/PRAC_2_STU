@@ -55,6 +55,7 @@ public class BridgeMonitor {
 		}
 		
 		safetyAnalyzer.goingSouth(id); // do not remove
+		this.southQueue.signal();
 		
 		/* COMPLETE */
 		this.lock.unlock();
@@ -110,6 +111,7 @@ public class BridgeMonitor {
 		}
 		
 		safetyAnalyzer.goingNorth(id); // do not remove
+		this.northQueue.signal();
 		/* COMPLETE */
 		this.lock.unlock();
 	}
