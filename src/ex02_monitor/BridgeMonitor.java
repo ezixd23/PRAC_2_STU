@@ -38,24 +38,25 @@ public class BridgeMonitor {
 		this.lock.lock();
 		
 		safetyAnalyzer.readyToGoSouth(id); // do not remove
+		
+		
+		/* COMPLETE */
 		while (southBarrier == CLOSED || this.southCount >= MAX) {
 			this.southWaitCount++;
 			southQueue.awaitUninterruptibly();
 			this.southWaitCount--;
 		}
 		this.northBarrier = CLOSED;
-		
-		
-		/* COMPLETE */
+
 		if(this.northWaitCount != 0) this.southCount++;
 		this.inTransit++;
 
 		if(this.southCount >= MAX) {
 			this.southBarrier = CLOSED;
 		}
+		this.southQueue.signal();
 		
 		safetyAnalyzer.goingSouth(id); // do not remove
-		this.southQueue.signal();
 		
 		/* COMPLETE */
 		this.lock.unlock();
@@ -94,24 +95,24 @@ public class BridgeMonitor {
 		this.lock.lock();
 		
 		safetyAnalyzer.readyToGoNorth(id); // do not remove
-
+		
+		/* COMPLETE */
 		while (northBarrier == CLOSED || this.northCount >= MAX) {
 			this.northWaitCount++;
 			northQueue.awaitUninterruptibly();
 			this.northWaitCount--;
 		}
 		this.southBarrier = CLOSED;
-		
-		/* COMPLETE */
+
 		if(this.southWaitCount != 0) this.northCount++;
 		this.inTransit++;
 		
 		if(this.northCount >= MAX) {
 			this.northBarrier = CLOSED;
 		}
+		this.northQueue.signal();
 		
 		safetyAnalyzer.goingNorth(id); // do not remove
-		this.northQueue.signal();
 		/* COMPLETE */
 		this.lock.unlock();
 	}
