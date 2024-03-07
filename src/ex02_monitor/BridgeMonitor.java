@@ -47,7 +47,7 @@ public class BridgeMonitor {
 		
 		
 		/* COMPLETE */
-		this.southCount++;
+		if(this.northWaitCount != 0) this.southCount++;
 		this.inTransit++;
 
 		if(this.southCount >= MAX) {
@@ -103,7 +103,7 @@ public class BridgeMonitor {
 		this.southBarrier = CLOSED;
 		
 		/* COMPLETE */
-		this.northCount++;
+		if(this.southWaitCount != 0) this.northCount++;
 		this.inTransit++;
 		
 		if(this.northCount >= MAX) {
